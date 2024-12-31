@@ -7,6 +7,11 @@ const router = require("express").Router();
 const User = require("../models/userModel");
 
 const bcrypt = require("bcryptjs");
+
+const jwt = require("jsonwebtoken"); //This is encrypting the data and getting token and send token to the frontend
+
+// JWT (JSON Web Token) is a compact and secure method for transmitting information between parties as a JSON object, typically used for authentication and authorization in web applications.
+
 // start writing the api
 
 // new user registration
@@ -47,3 +52,57 @@ router.post("/register", async (req, res) => {
     });
   }
 });
+
+// ------------------------------------------------------------------
+
+// user login , even this login there will be three steps
+
+router.post("/login", async (req, res) => {
+  try {
+    // 1 check waetherthe user is exist or not if user does not exists throw response like user does not exist
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    // out of the if statement means user exist
+    // 2 compare the hashed password  and plain pasword if that is success then send success response to the client
+    // we are having the method compare method in bcrypt itwill take both plain and hashed password
+
+    const validPassword = await bcrypt.compare(
+      req.body.password,
+      user.password
+    ); // 1st parameter will be the plain password,2nd password will be the hashed password (hashed password inthe sens enrypted password which is will be stotedin the mongoDB  )
+
+    //  if validPassword is true we are going to sed the response as login succesfull else invalid password
+
+    if (!validPassword) {
+      throw new Error("Invalid Password");
+    }
+    // else send the response
+
+    res.send({
+      success: true,
+      message: "User loged in successfully",
+    });
+    // 3 after comparing the password you have generating the token(create and asign the token) we are going to encrypt just userID (encrypted user id will beinthe form of token)not complete user object that token we will send it to the frontend  as the login response
+
+    const token = jwt.sign({ userid: user_id }, process.env.SECRET_TOKEN); //The method to be encrypt is sign 1st parameter will be the data that you want to encrypt ,2nd parameter will be the secret key becaus while decrypting you need key to decrept
+
+    // we are going to send the data as token
+    // in the registration we arenotsending anydatato the client we are sending the flag weather itis success or false becaus don'trequireany data after compleationg the registration but after loging we need some data from the server  which is nothing but the token ,becasus after the loginuser will navigated to the homepage , homepage they will perfom one more request like get all products -> get all products only exiguted-> once login you need token to perform otherapi request
+    res.send({
+      success: true,
+      message: "User logedin successfully",
+      data: token,
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// now we haveregistration and login  let me export both
+
+module.exports = router; // go to the server.js // this endpoints keyword '/api/users' will navigated to users route and check the login and registration endpoint based onthe endpoint nameit will exigute the logic and send the response weather it is ssuccess or error thisisthe process -> app.use("/api/users", usersRoute);
