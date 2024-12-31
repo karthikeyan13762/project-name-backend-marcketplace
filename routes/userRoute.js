@@ -45,6 +45,10 @@ router.post("/register", async (req, res) => {
     // 4 create a new user or else savenew user
     const newUser = new User(req.body);
     await newUser.save(); //In short, save() ensures that the document is validated, processed, and securely stored in the database.
+    res.send({
+      success: true,
+      message: "User Register  successfully",
+    });
   } catch (error) {
     res.send({
       success: false,
@@ -80,16 +84,14 @@ router.post("/login", async (req, res) => {
     }
     // else send the response
 
-    res.send({
-      success: true,
-      message: "User loged in successfully",
-    });
     // 3 after comparing the password you have generating the token(create and asign the token) we are going to encrypt just userID (encrypted user id will beinthe form of token)not complete user object that token we will send it to the frontend  as the login response
 
-    const token = jwt.sign({ userid: user_id }, process.env.SECRET_TOKEN); //The method to be encrypt is sign 1st parameter will be the data that you want to encrypt ,2nd parameter will be the secret key becaus while decrypting you need key to decrept
+    const token = jwt.sign({ userid: user._id }, process.env.SECRET_TOKEN, {
+      expiresIn: "1hr",
+    }); //The method to be encrypt is sign 1st parameter will be the data that you want to encrypt ,2nd parameter will be the secret key becaus while decrypting you need key to decrept
 
     // we are going to send the data as token
-    // in the registration we arenotsending anydatato the client we are sending the flag weather itis success or false becaus don'trequireany data after compleationg the registration but after loging we need some data from the server  which is nothing but the token ,becasus after the loginuser will navigated to the homepage , homepage they will perfom one more request like get all products -> get all products only exiguted-> once login you need token to perform otherapi request
+    // in the registration we arenotsending any data to the client we are sending the flag weather itis success or false becaus don'trequireany data after compleationg the registration but after loging we need some data from the server  which is nothing but the token ,becasus after the loginuser will navigated to the homepage , homepage they will perfom one more request like get all products -> get all products only exiguted-> once login you need token to perform otherapi request
     res.send({
       success: true,
       message: "User logedin successfully",
