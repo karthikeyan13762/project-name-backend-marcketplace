@@ -9,6 +9,7 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 
 const jwt = require("jsonwebtoken"); //This is encrypting the data and getting token and send token to the frontend
+const authMiggleware = require("../middlewares/authMiggleware");
 
 // JWT (JSON Web Token) is a compact and secure method for transmitting information between parties as a JSON object, typically used for authentication and authorization in web applications.
 
@@ -104,6 +105,34 @@ router.post("/login", async (req, res) => {
     });
   }
 });
+// ------------------------------------------------------
+//get current user-> that means get the information of the loged in user-> fromthefrontend what will we except only token that menas which will send while the login ,when there login we  will send the JWT token->these tken havethe encripted form of the user ID
+
+//frontend is calling the get currect userapi we will except the token becaus frontend not even no the userID of loged in person, frontend knomw token,help ofthe token we havet validate the regingapis
+router.get("/get-current-user", authMiggleware, async (req, res) => {
+  // req.body we will not having anything only req.headers wewill havw authorization token,we haveto decriptthe token and then token is valid then only you have send the response , but wedon't know how many apis we are going have with protected route concept ,thatis the reson we have to write this token decription logic in the somewher else we can re use thatpartis called middleware ,thatmeans before exiguting any protected endpoint logic we have to check the middleware , what logic checkinthe middelawre we haveto checkthe token -> the tokenis valid thenonly exigute this logic  res.send({  success: true,message: "User feteched successfully",data: user,}); Thts the condition oftheprotected route only loged in users canbe se the contenet of the home page that mens we will calthe homepageis /get-current-user
+  //frontend we will call it as the protected route inback end we will call  it us the authorization both  are same concepts
+  // un authorize user cannot be able to use our application
+
+  try {
+    // fetch the useerId from the mongodb and send the details to the UI
+
+    const user = await User.findById(req.body.userId); //we don't have userid write now,sotoget theuseridyoumust calledtheauthmiddleware
+    console.log(user);
+
+    res.send({
+      success: true,
+      message: "User feteched successfully",
+      data: user,
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+// ------------------------------------------------------
 
 // now we haveregistration and login  let me export both
 
