@@ -117,7 +117,7 @@ router.get("/get-current-user", authMiggleware, async (req, res) => {
   try {
     // fetch the useerId from the mongodb and send the details to the UI
 
-    const user = await User.findById(req.body.userId); //we don't have userid write now,sotoget theuseridyoumust calledtheauthmiddleware
+    const user = await User.findById(req.body.userId); //we don't have userid write now,sotoget the  userid you must called the uthmiddleware
     console.log(user);
 
     res.send({

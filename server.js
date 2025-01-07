@@ -12,6 +12,10 @@ const port = process.env.PORT || 5000;
 
 const usersRoute = require("./routes/userRoute");
 
+//1st importing product route and entry point
+const productsRoute = require("./routes/productsRoute");
+app.use("/api/products", productsRoute);
+
 // this endpoints keyword '/api/users' will navigated to users route and check the login and registration endpoint based onthe endpoint nameit will exigute the logic and send the response weather it is ssuccess or error thisisthe process
 
 // /api/users is a base route to group all user-related APIs (like registration and login) under a common path for better organization and clarity in the application's API structure.
