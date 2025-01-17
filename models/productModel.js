@@ -47,10 +47,14 @@ const productSchema = new mongoose.Schema(
       default: false,
       required: true,
     },
+    showBidsonProductPage: {
+      type: Boolean,
+      default: false,
+    },
     seller: {
       // seller is the reference of the user
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "user",
       required: true,
     },
     status: {

@@ -32,13 +32,40 @@ router.post("/add-product", authMiddleware, async (req, res) => {
 
 // get all the products
 
-router.get("/get-products", async (req, res) => {
+router.post("/get-products", async (req, res) => {
   try {
-    const products = await Product.find(); // later we will add the filters in the req body write now we are finding all
+    const { seller, category = [], age = [], status } = req.body;
+
+    let filters = {};
+    if (seller) {
+      filters.seller = seller;
+    }
+    if (status) {
+      filters.status = status;
+    }
+    // filterbycategory
+    if (category.length > 0) {
+      filters.category = { $in: category }; // Match products in selected categories
+    }
+    if (age.length > 0) {
+      const ageConditions = age.map((item) => {
+        const [fromAge, toAge] = item.split("-");
+        return { $gte: Number(fromAge), $lte: Number(toAge) };
+      });
+
+      if (ageConditions.length === 1) {
+        filters.age = ageConditions[0];
+      } else {
+        filters.age = { $or: ageConditions }; // Allow multiple age ranges
+      }
+    }
+    const products = await Product.find(filters)
+      .populate("seller", "name")
+      .sort({ createdAt: -1 }); // later we will add the filters in the req body write now we are finding all
 
     res.send({
       success: true,
-      message: products,
+      data: products,
     });
   } catch (error) {
     res.send({
@@ -142,6 +169,38 @@ router.post("/delete-image-from-product", authMiddleware, async (req, res) => {
     res.send({
       success: true,
       message: "Image deleted successfully",
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.put("/update-product-status/:id", authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    await Product.findByIdAndUpdate(req.params.id, { status }); // Updates status field
+    res.send({
+      success: true,
+      message: "Product status updated successfully",
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.get("/get-product-by-id/:id", authMiddleware, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate("seller");
+
+    res.send({
+      success: true,
+      data: product,
     });
   } catch (error) {
     res.send({

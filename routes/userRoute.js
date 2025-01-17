@@ -9,7 +9,7 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 
 const jwt = require("jsonwebtoken"); //This is encrypting the data and getting token and send token to the frontend
-const authMiggleware = require("../middlewares/authMiggleware");
+const authMiddleware = require("../middlewares/authMiggleware");
 
 // JWT (JSON Web Token) is a compact and secure method for transmitting information between parties as a JSON object, typically used for authentication and authorization in web applications.
 
@@ -78,6 +78,10 @@ router.post("/login", async (req, res) => {
       user.password
     ); // 1st parameter will be the plain password,2nd password will be the hashed password (hashed password inthe sens enrypted password which is will be stotedin the mongoDB  )
 
+    //if user is activeor not
+    if (user.status != "active") {
+      throw new Error("The user accoutis blocked please contact admin");
+    }
     //  if validPassword is true we are going to sed the response as login succesfull else invalid password
 
     if (!validPassword) {
@@ -109,7 +113,7 @@ router.post("/login", async (req, res) => {
 //get current user-> that means get the information of the loged in user-> fromthefrontend what will we except only token that menas which will send while the login ,when there login we  will send the JWT token->these tken havethe encripted form of the user ID
 
 //frontend is calling the get currect userapi we will except the token becaus frontend not even no the userID of loged in person, frontend knomw token,help ofthe token we havet validate the regingapis
-router.get("/get-current-user", authMiggleware, async (req, res) => {
+router.get("/get-current-user", authMiddleware, async (req, res) => {
   // req.body we will not having anything only req.headers wewill havw authorization token,we haveto decriptthe token and then token is valid then only you have send the response , but wedon't know how many apis we are going have with protected route concept ,thatis the reson we have to write this token decription logic in the somewher else we can re use thatpartis called middleware ,thatmeans before exiguting any protected endpoint logic we have to check the middleware , what logic checkinthe middelawre we haveto checkthe token -> the tokenis valid thenonly exigute this logic  res.send({  success: true,message: "User feteched successfully",data: user,}); Thts the condition oftheprotected route only loged in users canbe se the contenet of the home page that mens we will calthe homepageis /get-current-user
   //frontend we will call it as the protected route inback end we will call  it us the authorization both  are same concepts
   // un authorize user cannot be able to use our application
@@ -118,7 +122,6 @@ router.get("/get-current-user", authMiggleware, async (req, res) => {
     // fetch the useerId from the mongodb and send the details to the UI
 
     const user = await User.findById(req.body.userId); //we don't have userid write now,sotoget the  userid you must called the uthmiddleware
-    console.log(user);
 
     res.send({
       success: true,
@@ -127,6 +130,67 @@ router.get("/get-current-user", authMiggleware, async (req, res) => {
     });
   } catch (error) {
     res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// getall users
+
+router.get("/get-users", authMiddleware, async (req, res) => {
+  // This endpoint fetches all users, and it is protected by the authMiddleware.
+  try {
+    // Fetch all users from the database.
+    const users = await User.find();
+
+    // Respond with success and the list of users.
+    res.send({
+      success: true,
+      message: "Users fetched successfully",
+      data: users,
+    });
+  } catch (error) {
+    // Handle errors and send an error response.
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+// update-user-status
+router.put("/update-user-status/:userId", authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.params; // Extract userId from the URL parameters
+    const { status } = req.body; // Extract status from the request body
+
+    if (!status) {
+      return res.status(400).send({
+        success: false,
+        message: "Status is required",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { status },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.send({
+      success: true,
+      message: "User status updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).send({
       success: false,
       message: error.message,
     });

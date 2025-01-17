@@ -12,6 +12,7 @@ const port = process.env.PORT || 5000;
 
 const usersRoute = require("./routes/userRoute");
 
+const bidsRoute = require("./routes/bidRoute");
 //1st importing product route and entry point
 const productsRoute = require("./routes/productsRoute");
 app.use("/api/products", productsRoute);
@@ -20,6 +21,8 @@ app.use("/api/products", productsRoute);
 
 // /api/users is a base route to group all user-related APIs (like registration and login) under a common path for better organization and clarity in the application's API structure.
 app.use("/api/users", usersRoute);
+
+app.use("/api/bids", bidsRoute);
 // Start the server
 app.listen(port, () => {
   console.log(`NodeJS/Express server started on port ${port}`);
